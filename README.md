@@ -1,0 +1,1 @@
+# Projeto_detecao_objetos_SONAE_ARAUCO
