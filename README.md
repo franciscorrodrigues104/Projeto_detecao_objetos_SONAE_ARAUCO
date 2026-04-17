@@ -1,8 +1,3 @@
-Boa! Finalmente conseguiste "domar" o Git. Esse erro dos ficheiros grandes é o batismo de fogo de quase todos os programadores.
-
-Agora que o teu repositório está limpo e funcional, aqui tens um README.md profissional e bem estruturado. Podes copiar o código abaixo, colar no teu ficheiro README.md (substituindo o que lá estiver) e fazer o upload final.
-
-Markdown
 # 🚜 Projeto de Deteção e Contagem de Tratores - Sonae Arauco
 
 Este projeto utiliza visão computacional e **Deep Learning** para automatizar a deteção e monitorização de tratores em ambiente industrial. Desenvolvido durante o estágio na **Sonae Arauco**, o sistema visa otimizar o controlo logístico e operacional.
