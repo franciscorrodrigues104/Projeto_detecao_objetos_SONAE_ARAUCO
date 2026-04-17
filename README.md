@@ -44,15 +44,15 @@ O treino do modelo foi **concluído com sucesso** (100 épocas), apresentando m�
 
 ## 🛠️ Como Utilizar
 
-1.  **Clonar o projeto:**
+1.  **Clonar o projeto (cmd):**
     ```bash
     git clone [https://github.com/franciscorrodrigues104/Projeto_detecao_objetos_SONAE_ARAUCO.git](https://github.com/franciscorrodrigues104/Projeto_detecao_objetos_SONAE_ARAUCO.git)
     ```
-2.  **Instalar dependências:**
+2.  **Instalar dependências (cmd):**
     ```bash
     pip install -r requirements.txt
     ```
-3.  **Executar a aplicação final:**
+3.  **Executar a aplicação final (cmd):**
     ```bash
     python passo_5_detecao_front_end/app_detecao/codigo_trator_camara.py
     ```
