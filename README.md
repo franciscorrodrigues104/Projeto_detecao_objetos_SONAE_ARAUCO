@@ -1,8 +1,8 @@
-# 🚜 Projeto de Deteção e Contagem de Tratores - Sonae Arauco
+# Projeto de Deteção e Contagem de Tratores - Sonae Arauco
 
 Este projeto utiliza visão computacional e **Deep Learning** para automatizar a deteção e monitorização de tratores em ambiente industrial. Desenvolvido durante o estágio na **Sonae Arauco**, o sistema otimiza o controlo logístico através da análise de vídeo em tempo real com alta precisão.
 
-## 📋 Funcionalidades
+## Funcionalidades
 * **Deteção de Alta Precisão:** Identificação de tratores com métricas de sucesso superiores a 99%.
 * **Modelo Finalizado:** YOLOv8 treinado especificamente para o ambiente fabril da Sonae Arauco.
 * **Interface Web:** Dashboard em Flask para visualização das deteções e contagem automática.
@@ -10,7 +10,7 @@ Este projeto utiliza visão computacional e **Deep Learning** para automatizar a
 
 ---
 
-## 🏗️ Estrutura do Repositório
+## Estrutura do Repositório
 
 O projeto seguiu uma metodologia estruturada em 5 etapas:
 
@@ -22,7 +22,7 @@ O projeto seguiu uma metodologia estruturada em 5 etapas:
 
 ---
 
-## 🚀 Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 * **IA:** YOLOv8 (Ultralytics)
 * **Linguagem:** Python 3.12
@@ -32,7 +32,7 @@ O projeto seguiu uma metodologia estruturada em 5 etapas:
 
 ---
 
-## 📊 Performance e Resultados Finais
+## Performance e Resultados Finais
 
 O treino foi concluído com métricas de excelência após **100 épocas** (aprox. 3.7 horas de processamento):
 
@@ -46,7 +46,7 @@ O treino foi concluído com métricas de excelência após **100 épocas** (apro
 
 ---
 
-## 🛠️ Como Utilizar
+## Como Utilizar
 
 1.  **Clonar o projeto (cmd):**
     ```bash
