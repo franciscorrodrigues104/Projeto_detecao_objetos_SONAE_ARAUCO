@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Processador de Vídeo Acelerado</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
+        .card { background: white; padding: 40px; border-radius: 10px; max-width: 700px; margin: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .progress-container { background: #eee; border-radius: 10px; height: 25px; margin: 20px 0; overflow: hidden; }
+        .progress-bar { background: #83BE42; width: 0%; height: 100%; transition: width 0.3s; text-align: center; color: white; line-height: 25px; }
+        #log { background: #ffffff; color: #000000; padding: 10px; height: 150px; overflow-y: auto; font-size: 17px; border-radius: 5px; }
+        input { width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box; }
+        #eta-container { 
+            display: none; 
+            text-align: center; 
+            margin-top: 10px; 
+            font-weight: bold;
+            color: #555;
+        }
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        button { flex: 1; padding: 12px; color: white; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        .btn-start { background: #83BE42; }
+        .btn-stop { background: #d9534f; }
+        .btn-encerrar {background: #d9534f; }
+    </style>
+</head>
+<body>
+    <div class="card" style="text-align: center">
+        <h2>Processar Vídeo - Acelerado</h2>
+        <label for="data_inicio" style="font-weight: bold; color: #333; margin-right: 10px;">
+         Data exata do início do vídeo (obter tempo exato (HH-MM-SS) em que trator é detetado) 
+    </label>
+    <div style="text-align: center; margin-top: 20px;">
+        <input type="text" id="data_inicio" placeholder="YYYY-MM-DD HH:MM:SS" style="padding: 10px; border-radius: 6px; border: 1px solid #ccc; width: 180px; align-content: center;">
+        </div>
+        <div class="btn-group">
+            <button class="btn-start" onclick="iniciar()">Iniciar Processamento</button>
+            <button class="btn-stop" onclick="parar()">Parar</button>
+            <button class="btn-encerrar" onclick="encerrarapp()">Encerrar App</button>
+        </div>
+
+        <div class="progress-container" id="p-cont"> 
+            <div id="bar" class="progress-bar"></div>
+        </div>
+
+        <div id="eta-container">
+            Tempo estimado restante: <span id="eta">--</span>
+        </div>
+
+        <p>Total de tratores detetados no vídeo: <b id="contador">0</b></p>
+        <div id="log"></div>
+    </div>
+
+
+<script>
+    let startTime = null;
+
+    function preencherDataAtual() {
+        const agora = new Date();
+        const formatada = agora.getFullYear() + "-" + 
+            String(agora.getMonth() + 1).padStart(2, '0') + "-" + 
+            String(agora.getDate()).padStart(2, '0') + " " + 
+            String(agora.getHours()).padStart(2, '0') + ":" + 
+            String(agora.getMinutes()).padStart(2, '0') + ":" + 
+            String(agora.getSeconds()).padStart(2, '0');
+        
+        document.getElementById('data_inicio').value = formatada;
+    }
+
+    window.onload = preencherDataAtual;
+    
+let iniciado = false;
+let eventSource = null; 
+    function iniciar() {
+
+        if(iniciado === false){
+             iniciado = true;
+
+    const data = document.getElementById('data_inicio').value;
+    const etaText = document.getElementById('eta');
+    const bar = document.getElementById('bar');
+    const logDiv = document.getElementById('log'); 
+    const etaContainer = document.getElementById('eta-container');
+    const contadorText = document.getElementById('contador');
+    const p_cont = document.getElementById('p-cont');
+
+    etaContainer.style.display = 'block';
+    bar.style.display = 'block';
+    p_cont.style.display = 'block';
+
+    startTime = Date.now();
+
+    eventSource = new EventSource(`/progresso?inicio=${encodeURIComponent(data)}`);
+
+    eventSource.onmessage = function(e) {
+        console.log("Dados recebidos:", e.data); 
+        const msg = JSON.parse(e.data);
+
+        if(msg.total !== undefined){
+            contadorText.innerHTML = msg.total;
+        }
+        
+        if (msg.log) {
+            logDiv.innerHTML += msg.log + "<br>";
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        if (msg.percent !== undefined) {
+            bar.style.width = msg.percent + "%";
+            bar.innerText = msg.percent + "%";
+            
+            if (msg.percent > 0) {
+                let timeElapsed = (Date.now() - startTime) / 1000;
+                let remainingTime = Math.round((timeElapsed / (msg.percent / 100)) - timeElapsed);
+                etaText.innerText = remainingTime + "s";
+            }
+        }
+        
+        if (msg.done) {
+            etaText.innerText = "Concluído";
+            eventSource.close();
+            iniciado = false;
+        }
+        }
+
+    eventSource.onerror = function(e) {
+        console.error("Erro no EventSource:", e);
+        logDiv.innerHTML += "<span style='color:red'>Erro na ligação.</span><br>";
+        eventSource.close();
+        iniciado = false;
+    };
+}else{
+    console.log("Está a correr!");
+}
+    
+
+}
+
+function parar() {
+
+     if(eventSource){
+        eventSource.close();
+        eventSource = null;
+     }
+     
+     iniciado = false;
+
+     document.getElementById('log').innerHTML = "";
+        document.getElementById('contador').innerHTML = "0";
+        document.getElementById('bar').style.width = "0%";
+        document.getElementById('bar').innerText = "0%";
+        document.getElementById('eta').innerText = "--";
+
+        fetch('/parar_agora', { method: 'POST' });
+
+       
+        
+        preencherDataAtual();
+    }
+
+function encerrarapp(){
+    const resposta = confirm("Tem a certeza que deseja encerrar a aplicação?");
+    if(resposta === true){
+    fetch('/encerrarApp', { method: 'POST'});
+    window.close();
+    }
+
+}
+
+
+</script>
+</body>
+</html>

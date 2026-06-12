@@ -1,0 +1,385 @@
+    <!DOCTYPE html>
+    <html lang="pt">
+    <head>
+        <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+        <meta charset="UTF-8">
+        <title>Relatório de Deteções - Trator</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
+            h2 { color: #000000; margin-top: 30px; }
+            table { width: 100%;  table-layout: fixed;  width: 100%;border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+            th, td { padding: 12px; text-align: center; border-bottom: 1px solid #ddd; color: #000000; }
+            th { background-color: #83BE42; color: #000000; }
+            tr:hover { background-color: #f1f1f1; }
+    
+
+            .header-container {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 30px;
+            }
+
+            .logo-stats-group {
+                display: flex;
+                align-items: center;
+                gap: 30px;
+            }
+
+
+            
+    .modal {
+    display: none; 
+    position: fixed; 
+    z-index: 2000; 
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    background-color: rgba(0,0,0,0.85); 
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+    .modal-content {
+        margin: auto;
+        display: block;
+        max-width: 90%; 
+        max-height: 85vh;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(255,255,255,0.2);
+        
+        animation-name: zoom;
+        animation-duration: 0.3s;
+        position: relative;
+    }
+
+    .scroll-container {
+    max-height: 400px; 
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+}
+
+    @keyframes zoom {
+        from {transform:scale(0)} 
+        to {transform:scale(1)}
+    }
+
+    .close-modal {
+        position: absolute;
+        top: 15px;
+        right: 35px;
+        color: #f1f1f1;
+        font-size: 40px;
+        font-weight: bold;
+        transition: 0.3s;
+        cursor: pointer;
+    }
+
+    .close-modal:hover,
+    .close-modal:focus {
+        color: #83BE42;
+        text-decoration: none;
+        transform: scale(1.2);
+    }
+
+
+    input[type="range"] {
+    height: 5px;
+    background: transparent;
+}
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+    background: #83BE42;
+    cursor: pointer;
+    pointer-events: all;
+    border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+        </style>
+    </head>
+    <body>
+
+        <div class="header-container">
+            <div class="logo-stats-group">
+                <img src="{{ url_for('static', filename='logo_sonae.png') }}" alt="Logo SONAE ARAUCO" style="max-width: 150px;">
+                
+                <div style="background: #ffffff; border-left: 6px solid #83BE42; padding: 10px 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column;">
+                    <h4 style="margin: 0; color: #95a5a6; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">
+                        Contagem do Dia: {{ data_selecionada }}
+                    </h4>
+                    <div id="contador-container" style="display: flex; align-items: center; margin-top: 5px;">
+        <span id="num-contador" style="font-size: 2.2rem; font-weight: 800; color: #2c3e50; line-height: 1;">
+            {{ total }}
+        </span>
+        <span style="margin-left: 10px; font-size: 1.5rem;">🚩</span>
+
+    </div>
+                </div>
+            </div>
+
+           
+        </div>
+
+       <div style="margin-bottom: 20px; padding: 15px; background: #e9e9e9; border-radius: 8px; width: 100%; box-sizing: border-box;">
+    <label><strong>Filtrar por Área da Falha (px²):</strong></label>
+    <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+        <input type="number" id="inputMin" placeholder="Mín" min="0"
+            style="padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc; width: 100px;">
+        <span>—</span>
+        <input type="number" id="inputMax" placeholder="Máx" min="0"
+            style="padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc; width: 100px;">
+        <button onclick="aplicarFiltroArea()" style="padding: 6px 20px; cursor: pointer; background-color: #333; color: white; border: none; border-radius: 4px;">
+            🔍 Filtrar
+        </button>
+<button onclick="limparFiltroArea()" style="text-decoration: none; font-size: 0.9rem; color: #666; margin-left: 10px; background: none; border: none; cursor: pointer;">Limpar Filtro</button>
+
+        <span id="msgFiltroArea" style="font-size: 0.85rem; color: #555;"></span>
+    </div>
+</div>
+</div>
+
+        <div style="margin-bottom: 20px; padding: 15px; background: #e9e9e9; border-radius: 8px; display: inline-block; width: 100%; box-sizing: border-box;">
+            <form action="/" method="GET" style="display: flex; gap: 10px; align-items: center;">
+                <label for="data"><strong>Filtrar por Dia:</strong></label>
+                <input type="date" id="data" name="data" value="{{ data_selecionada }}" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
+                <button type="submit" style="padding: 6px 20px; cursor: pointer; background-color: #333; color: white; border: none; border-radius: 4px;">🔍 Filtrar</button>
+                <a href="/" style="text-decoration: none; font-size: 0.9rem; color: #666; margin-left: 10px;">Limpar Filtro</a>
+<button type="submit" 
+            onclick="encerrarapp()" 
+            style="margin-left: auto; padding: 6px 30px; cursor: pointer; background-color: #ff0000; color: white; border: none; border-radius: 6px;">
+        Sair da aplicação
+    </button>
+            </form>
+        </div>
+
+        </div>
+
+    <h2>Histórico de falhas em lotes - SONAE ARAUCO</h2>
+
+   <div class="scroll-container" style="max-height: 320px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 50px; background: white;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead style="position: sticky; top: 0; background-color: #83BE42; color: black; z-index: 10;">
+            <tr>
+                <th style="padding: 12px;">ID</th>
+                <th>Data&hora da falha</th>
+                <th>Imagem detecao</th>
+            </tr>
+        </thead>
+        
+        <tbody id="corpo-tabela" 
+               hx-get="/tabela_atualizada?data={{ data_selecionada }}" 
+               hx-trigger="every 2s" 
+               hx-swap="innerHTML">
+            {% include 'tabela_parcial.html' %}
+        </tbody>
+    </table>
+</div>
+
+<div style="margin: 30px 0; text-align: center;">
+    <h3 style="color: #333; font-size: 1rem;">Visualização em Tempo Real</h3>
+    <div style="border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); overflow: hidden; border: 3px solid #333; display: inline-block; width: 700px; height: 400px; background: black;">
+        <img src="{{ url_for('video_feed') }}" style="width: 100%; height: 100%; object-fit: contain;">
+    </div>
+</div>
+    
+
+ <div id="meuModalImagem" class="modal" onclick="fecharModal()">
+    <span class="close-modal" onclick="fecharModal()">&times;</span>
+    <div style="display:flex; gap:20px; justify-content:center; align-items:center;" onclick="event.stopPropagation()">
+        
+        <div id="wrapDetecao" style="text-align:center; display:flex; flex-direction:column; align-items:center; transition: all 0.3s ease;">
+            <p style="color:white; margin-bottom:8px; font-weight:bold;">Imagem Deteção</p>
+<div id="boxDetecao" style="overflow:auto; border-radius:8px; display:flex; align-items:center; justify-content:center; height:60vh;">
+                <img id="imgDetecao"
+                     style="max-width:42vw; max-height:60vh; border-radius:8px; cursor:zoom-in;"
+                     onclick="ampliarImagem('imgDetecao')">
+            </div>
+        </div>
+
+        <div id="wrapOriginal" style="text-align:center; display:flex; flex-direction:column; align-items:center; transition: all 0.3s ease;">
+            <p style="color:white; margin-bottom:8px; font-weight:bold;">Imagem Original</p>
+<div id="boxOriginal" style="overflow:auto; border-radius:8px; display:flex; align-items:center; justify-content:center; height:60vh;">
+                <img id="imgOriginal"
+                     style="max-width:42vw; max-height:60vh; border-radius:8px; cursor:zoom-in;"
+                     onclick="ampliarImagem('imgOriginal')">
+            </div>
+    </div>
+</div>
+</div>
+        <script>
+
+        
+            
+let zoomWidth = null;
+let imagemAmpliada = null;
+
+function abrirModal(srcDetecao, srcOriginal) {
+    document.getElementById("imgDetecao").src = srcDetecao;
+    document.getElementById("imgOriginal").src = srcOriginal;
+    document.getElementById("meuModalImagem").style.display = "flex";
+    resetarZoom();
+}
+
+function fecharModal() {
+    document.getElementById("meuModalImagem").style.display = "none";
+    resetarZoom();
+}
+
+function resetarZoom() {
+    zoomWidth = null;
+    imagemAmpliada = null;
+
+    ["imgDetecao", "imgOriginal"].forEach(id => {
+        const img = document.getElementById(id);
+        img.style.width = "";
+        img.style.maxWidth = "42vw";
+        img.style.maxHeight = "60vh";
+        img.style.opacity = "1";
+        img.style.cursor = "zoom-in";
+    });
+
+    document.getElementById("boxDetecao").style.overflow = "hidden";
+    document.getElementById("boxOriginal").style.overflow = "hidden";
+    document.getElementById("wrapDetecao").style.flex = "1";
+    document.getElementById("wrapOriginal").style.flex = "1";
+}
+
+function ampliarImagem(imgId) {
+    if (imagemAmpliada === imgId) {
+        resetarZoom();
+        return;
+    }
+
+    zoomWidth = null;
+    imagemAmpliada = imgId;
+    const activeBoxId = imgId === "imgDetecao" ? "boxDetecao" : "boxOriginal";
+
+    const principal  = document.getElementById(imgId);
+    const outraId    = imgId === "imgDetecao" ? "imgOriginal" : "imgDetecao";
+    const outra      = document.getElementById(outraId);
+    const wPrincipal = imgId === "imgDetecao" ? "wrapDetecao" : "wrapOriginal";
+    const wOutra     = imgId === "imgDetecao" ? "wrapOriginal" : "wrapDetecao";
+
+    principal.style.maxWidth  = "none";
+    principal.style.maxHeight = "none";
+    principal.style.width     = "70vw";
+    principal.style.cursor    = "zoom-out";
+    principal.style.opacity   = "1";
+    zoomWidth = principal.getBoundingClientRect().width;
+
+    outra.style.maxWidth  = "14vw";
+    outra.style.maxHeight = "30vh";
+    outra.style.opacity   = "0.35";
+    outra.style.cursor    = "zoom-in";
+
+    document.getElementById(wPrincipal).style.flex = "3";
+    document.getElementById(wOutra).style.flex     = "0.5";
+    document.getElementById(activeBoxId).style.overflow = "auto";
+}
+
+// ZOOM com scroll do rato
+["imgDetecao", "imgOriginal"].forEach(function(id) {
+    document.getElementById(id).addEventListener("wheel", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (imagemAmpliada !== id) return;
+
+        if (zoomWidth === null) zoomWidth = this.getBoundingClientRect().width;
+
+        zoomWidth = e.deltaY < 0
+            ? Math.min(zoomWidth * 1.1, window.innerWidth * 3)
+            : Math.max(zoomWidth * 0.9, 200);
+
+        this.style.width     = zoomWidth + "px";
+        this.style.maxWidth  = "none";
+        this.style.maxHeight = "none";
+    }, { passive: false });
+});
+
+document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") fecharModal();
+});
+
+    const dataCarregamento = new Date().toLocaleDateString('en-CA');
+
+function atualizaPaginaData() {
+    const hoje = new Date().toLocaleDateString('en-CA');
+    
+    if (hoje !== dataCarregamento) {
+        window.location.href = "/"; 
+    }
+}
+
+setInterval(atualizaPaginaData, 10000);
+
+function encerrarapp(){
+    const resposta = confirm("Tem a certeza que deseja encerrar a aplicação?");
+    if(resposta === true){
+    fetch('/encerrarApp', { method: 'POST'});
+    window.close();
+    }
+
+}
+
+
+let areaMin = null;
+let areaMax = null;
+let filtroAreaAtivo = false;
+
+function aplicarFiltroArea() {
+    const minVal = document.getElementById("inputMin").value;
+    const maxVal = document.getElementById("inputMax").value;
+
+    if (minVal === "" && maxVal === "") {
+        document.getElementById("msgFiltroArea").textContent = "Insere pelo menos um valor.";
+        return;
+    }
+
+    areaMin = minVal !== "" ? parseInt(minVal) : 0;
+    areaMax = maxVal !== "" ? parseInt(maxVal) : Infinity;
+
+    if (areaMin > areaMax) {
+        document.getElementById("msgFiltroArea").textContent = "O mínimo não pode ser maior que o máximo.";
+        return;
+    }
+
+    filtroAreaAtivo = true;
+    document.getElementById("msgFiltroArea").textContent = `A mostrar: ${areaMin.toLocaleString()} — ${areaMax === Infinity ? "∞" : areaMax.toLocaleString()} px²`;
+    filtrarTabelaPorArea();
+}
+
+function limparFiltroArea() {
+    filtroAreaAtivo = false;
+    areaMin = null;
+    areaMax = null;
+    document.getElementById("inputMin").value = "";
+    document.getElementById("inputMax").value = "";
+    document.getElementById("msgFiltroArea").textContent = "";
+    document.querySelectorAll("#corpo-tabela tr").forEach(tr => tr.style.display = "");
+}
+
+function filtrarTabelaPorArea() {
+    if (!filtroAreaAtivo) return;
+    document.querySelectorAll("#corpo-tabela tr").forEach(tr => {
+        const areaCell = tr.querySelector(".area-falha");
+        if (!areaCell) return;
+        const valor = parseInt(areaCell.dataset.area) || 0;
+        tr.style.display = (valor >= areaMin && valor <= areaMax) ? "" : "none";
+    });
+}
+
+document.getElementById("corpo-tabela").addEventListener("htmx:afterSwap", function() {
+    filtrarTabelaPorArea();
+});
+
+  
+        </script>
+    </body>
+    </html>

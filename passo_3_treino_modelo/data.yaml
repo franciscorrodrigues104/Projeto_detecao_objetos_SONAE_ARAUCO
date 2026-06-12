@@ -1,6 +1,0 @@
-path: C:\Users\frrodrigues\Desktop\Projeto_detecao_trator\passo_2_divisao_teste_treino
-train: train/images
-val: val/images        
-
-nc: 1                   
-names: ['trator']
