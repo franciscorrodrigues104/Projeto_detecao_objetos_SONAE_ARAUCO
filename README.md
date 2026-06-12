@@ -1,67 +1,79 @@
-# Projeto de Deteção e Contagem de Tratores - Sonae Arauco
+# Portfolio de Estágio Curricular - Sonae Arauco
 
-Este projeto utiliza visão computacional e **Deep Learning** para automatizar a deteção e monitorização de tratores em ambiente industrial. Desenvolvido durante o estágio na **Sonae Arauco**, o sistema otimiza o controlo logístico através da análise de vídeo em tempo real com alta precisão.
+**Autor:** Francisco Ribeiro Rodrigues  
+**Instituição:** Sonae Arauco (Estágio Curricular)
 
-## Funcionalidades
-* **Deteção de Alta Precisão:** Identificação de tratores com métricas de sucesso superiores a 99%.
-* **Modelo Finalizado:** YOLOv8 treinado especificamente para o ambiente fabril da Sonae Arauco.
-* **Interface Web:** Dashboard em Flask para visualização das deteções e contagem automática.
-* **Integração Cloud:** Registo de dados no **Supabase** para análise histórica e relatórios.
+Este repositório documenta os projetos de visão computacional desenvolvidos durante o meu estágio na Sonae Arauco, focados na automatização da monitorização industrial através de inteligência artificial.
 
 ---
 
-## Estrutura do Repositório
+## Índice
+1. [Projeto 1: Deteção e Contagem de Tratores](#projeto-1)
+2. [Projeto 2: Deteção de Falhas em Lotes](#projeto-2)
+3. [Tecnologias Utilizadas](#tecnologias-utilizadas)
 
-O projeto seguiu uma metodologia estruturada em 5 etapas:
+---
 
-1.  **`passo_1_extracao_imagens_frames`**: Processamento de vídeos CCTV para criação do dataset.
-2.  **`passo_2_divisao_teste_treino`**: Segmentação de dados (Train/Val) seguindo o padrão YOLO.
-3.  **`passo_3_treino_modelo`**: Execução do treino robusto ao longo de 100 épocas.
-4.  **`passo_4_teste_modelo`**: Scripts de inferência e validação final de métricas.
-5.  **`passo_5_detecao_front_end`**: Aplicação completa (Flask + Supabase).
+## Projeto 1: Deteção e Contagem de Tratores
 
+Sistema desenvolvido para a automação da monitorização logística de tratores em ambiente industrial.
+
+### Funcionalidades
+* **Deteção de Alta Precisão:** Identificação de tratores com métricas de sucesso superiores a 99%.
+* **Modelo Finalizado:** YOLOv8 treinado especificamente para o ambiente fabril da Sonae Arauco.
+* **Interface Web:** Dashboard em Flask para visualização das deteções e contagem automática.
+* **Integração Cloud:** Registo de dados no Supabase para análise histórica e relatórios.
+
+### Performance e Resultados Finais
+O treino foi concluído após 100 épocas (aprox. 3.7 horas de processamento):
+
+* **mAP50:** 0.995 (99.5%)
+* **mAP50-95:** 0.99 (99%)
+* **Precisão (P):** 0.974
+* **Recall (R):** 1.0
+* **Velocidade de Inferência:** ~66.3ms por imagem
+
+---
+
+## Projeto 2: Deteção de Falhas em Lotes
+
+Sistema especializado na deteção automática de anomalias em lotes de produção em tempo real.
+
+### Funcionalidades
+* **Monitorização em Tempo Real:** Deteção contínua de falhas na linha de produção.
+* **Mecanismo de Estabilidade:** Aplicação de um cooldown de 6 segundos para evitar registos duplicados ou ruído.
+* **Dashboard Dinâmico:** Visualização de alertas e histórico de falhas com atualização automática.
+
+### Performance e Resultados Finais
+O modelo atingiu os seguintes níveis de confiança após o treino:
+
+**Modelo de Deteção e Contagem de Tratores:**
+* **mAP50:** 0.995 (99.5%)
+* **mAP50-95:** 0.99 (99%)
+* **Precisão (P):** 0.974
+* **Recall (R):** 1.0
+* **Velocidade de Inferência:** ~66.3ms por imagem
+
+**Modelo de Deteção de Falhas em Lotes (Desalinhamento e Falhas):**
+* **mAP50:** 0.534 (53.4%)
+* **mAP50-95:** 0.188 (18.8%)
+* **Precisão (P):** 0.763
+* **Recall (R):** 0.509
+* **Velocidade de Inferência:** ~5.8ms por imagem (preprocessamento + inferência)
 ---
 
 ## Tecnologias Utilizadas
 
-* **IA:** YOLOv8 (Ultralytics)
+* **IA / Deep Learning:** YOLOv8/YOLO11s (Ultralytics), PyTorch
 * **Linguagem:** Python 3.12
 * **Backend:** Flask & Supabase (PostgreSQL)
+* **Interface:** HTML, JavaScript, HTMX
 * **Hardware de Teste:** Intel Core i5-8250U @ 1.60GHz
-* **Bibliotecas:** OpenCV, PyTorch (torch-2.10.0+cpu)
 
 ---
 
-## Performance e Resultados Finais
+## Instalação e Execução
 
-O treino foi concluído com métricas de excelência após **100 épocas** (aprox. 3.7 horas de processamento):
-
-* **mAP50 (Mean Average Precision):** **0.995 (99.5%)** - Indica uma precisão quase perfeita na deteção.
-* **mAP50-95:** **0.99 (99%)** - Demonstra uma precisão extrema no ajuste das Bounding Boxes.
-* **Precisão (P):** **0.974**
-* **Recall (R):** **1.0** (O modelo detetou todos os casos de teste sem falhas).
-* **Velocidade de Inferência:** ~66.3ms por imagem (ideal para monitorização em tempo real).
-
-> O modelo demonstrou uma convergência sólida, com a perda de caixa (`box_loss`) a descer para **0.09** e a perda de classificação (`cls_loss`) para **0.11** na última época.
-
----
-
-## Como Utilizar
-
-1.  **Clonar o projeto (cmd):**
-    ```bash
-    git clone [https://github.com/franciscorrodrigues104/Projeto_detecao_objetos_SONAE_ARAUCO.git](https://github.com/franciscorrodrigues104/Projeto_detecao_objetos_SONAE_ARAUCO.git)
-    ```
-2.  **Instalar dependências (cmd):**
-    ```bash
-    pip install -r requirements.txt
-    ```
-3.  **Executar a aplicação (cmd):**
-    ```bash
-    python passo_5_detecao_front_end/app_detecao/codigo_trator_camara.py
-    ```
-
----
-
-**Autor:** Francisco Rodrigues  
-**Instituição:** Sonae Arauco (Estágio Curricular)
+1. **Clonar o repositório:**
+   ```bash
+   git clone [https://github.com/franciscorrodrigues104/Projeto_detecao_objetos_SONAE_ARAUCO.git](https://github.com/franciscorrodrigues104/Projeto_detecao_objetos_SONAE_ARAUCO.git)
