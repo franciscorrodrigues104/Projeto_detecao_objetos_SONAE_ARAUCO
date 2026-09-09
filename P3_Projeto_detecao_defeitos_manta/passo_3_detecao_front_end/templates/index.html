@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard de Defeitos - Manta</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
+        h2, h3 { color: #000000; }
+
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .logo-stats-group {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .painel {
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .zona-heatmap {
+            transition: background-color 0.4s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============ CABEÇALHO: logo + contador do dia ============ -->
+    <div class="header-container">
+        <div class="logo-stats-group">
+            <img src="{{ url_for('static', filename='logo_sonae.png') }}" alt="Logo SONAE ARAUCO" style="max-width: 150px;">
+
+            <div style="background: #ffffff; border-left: 6px solid #83BE42; padding: 10px 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column;">
+                <h4 style="margin: 0; color: #95a5a6; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">
+                    Defeitos Detetados: {{ data_selecionada }}
+                </h4>
+                <div id="contador-container" style="display: flex; align-items: center; margin-top: 5px;">
+                    <span id="num-contador" style="font-size: 2.2rem; font-weight: 800; color: #2c3e50; line-height: 1;">
+                        {{ total }}
+                    </span>
+                    <span style="margin-left: 10px; font-size: 1.5rem;">⚠️</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ FILTRO POR DIA ============ -->
+    <div style="margin-bottom: 20px; padding: 15px; background: #e9e9e9; border-radius: 8px; display: inline-block; width: 100%; box-sizing: border-box;">
+        <form action="/" method="GET" style="display: flex; gap: 10px; align-items: center;">
+            <label for="data"><strong>Filtrar por Dia:</strong></label>
+            <input type="date" id="data" name="data" value="{{ data_selecionada }}" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
+            <button type="submit" style="padding: 6px 20px; cursor: pointer; background-color: #333; color: white; border: none; border-radius: 4px;">🔍 Filtrar</button>
+            <a href="/" style="text-decoration: none; font-size: 0.9rem; color: #666; margin-left: 10px;">Limpar Filtro</a>
+            <button type="submit" onclick="encerrarapp()" style="margin-left: auto; padding: 6px 30px; cursor: pointer; background-color: #ff0000; color: white; border: none; border-radius: 6px;">
+                Sair da aplicação
+            </button>
+        </form>
+    </div>
+
+    <h2>Deteção de Defeitos na Manta - SONAE ARAUCO</h2>
+
+    <!-- ============ VÍDEO EM DIRETO (segmentação + defeitos) ============ -->
+    <div style="margin: 30px 0; text-align: center;">
+        <h3 style="color: #333; font-size: 1rem;">Visualização em Tempo Real</h3>
+        <div style="border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); overflow: hidden; border: 3px solid #333; display: inline-block; max-width: 100%;">
+            <img src="{{ url_for('video_feed') }}" style="width: 100%; max-width: 1600px; display: block;">
+        </div>
+    </div>
+
+    <!-- ============ HISTOGRAMA POR TIPO DE DEFEITO ============ -->
+    <div class="painel">
+        <h3>Defeitos por tipo</h3>
+        <canvas id="graficoHistograma" height="90"></canvas>
+    </div>
+
+    <!-- ============ HEATMAP POR ZONA DA MANTA ============ -->
+    <div class="painel">
+        <h3>Concentração de defeitos ao longo da largura da manta</h3>
+        <div id="heatmapZonas" style="display: flex; gap: 6px; height: 80px;"></div>
+        <p style="color: #888; font-size: 0.8rem; margin-top: 8px; margin-bottom: 0;">
+            Zona 1 = extremo esquerdo da manta &nbsp;•&nbsp; Zona {{ n_zonas }} = extremo direito
+        </p>
+    </div>
+
+    <script>
+        // ---- Histograma (Chart.js) ----
+        const ctx = document.getElementById('graficoHistograma').getContext('2d');
+        const dadosIniciais = {{ histograma_inicial | safe }};
+
+        const grafico = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(dadosIniciais),
+                datasets: [{
+                    label: 'Defeitos detetados',
+                    data: Object.values(dadosIniciais),
+                    backgroundColor: '#83BE42',
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            }
+        });
+
+        // ---- Heatmap por zona (grid de cor) ----
+        const nZonas = {{ n_zonas }};
+        const heatmapInicial = {{ heatmap_inicial | safe }};
+        const heatmapContainer = document.getElementById('heatmapZonas');
+
+        for (let i = 0; i < nZonas; i++) {
+            const div = document.createElement('div');
+            div.className = 'zona-heatmap';
+            div.id = `zona-${i}`;
+            div.style.flex = '1';
+            div.style.display = 'flex';
+            div.style.flexDirection = 'column';
+            div.style.alignItems = 'center';
+            div.style.justifyContent = 'center';
+            div.style.borderRadius = '8px';
+            div.style.color = '#2c3e50';
+            div.style.fontWeight = 'bold';
+            div.innerHTML = `<span class="zona-valor" style="font-size:1.3rem;">0</span><small>Z${i + 1}</small>`;
+            heatmapContainer.appendChild(div);
+        }
+
+        function corParaValor(valor, maximo) {
+            if (maximo === 0) return '#eeeeee';
+            const t = valor / maximo;
+            // interpola de um cinza-claro (#f4f4f9) até o verde da marca (#83BE42)
+            const r = Math.round(244 + t * (131 - 244));
+            const g = Math.round(244 + t * (190 - 244));
+            const b = Math.round(249 + t * (66 - 249));
+            return `rgb(${r},${g},${b})`;
+        }
+
+        function pintarHeatmap(valores) {
+            const maximo = Math.max(0, ...valores);
+            valores.forEach((valor, i) => {
+                const div = document.getElementById(`zona-${i}`);
+                if (!div) return;
+                div.style.backgroundColor = corParaValor(valor, maximo);
+                div.querySelector('.zona-valor').textContent = valor;
+            });
+        }
+        pintarHeatmap(heatmapInicial);
+
+        // ---- Atualização em tempo real (poll a cada 2s) ----
+        async function atualizarDados() {
+            const params = new URLSearchParams(window.location.search);
+            const data = params.get('data') || '';
+            try {
+                const resp = await fetch(`/dados_grafico?data=${data}`);
+                const json = await resp.json();
+
+                grafico.data.labels = Object.keys(json.histograma);
+                grafico.data.datasets[0].data = Object.values(json.histograma);
+                grafico.update();
+
+                pintarHeatmap(json.heatmap);
+
+                document.getElementById('num-contador').textContent = json.total;
+            } catch (e) {
+                console.error('Erro ao atualizar dados:', e);
+            }
+        }
+        setInterval(atualizarDados, 2000);
+
+        // ---- Recarregar a página quando o dia civil mudar ----
+        const dataCarregamento = new Date().toLocaleDateString('en-CA');
+        function atualizaPaginaData() {
+            const hoje = new Date().toLocaleDateString('en-CA');
+            if (hoje !== dataCarregamento) {
+                window.location.href = "/";
+            }
+        }
+        setInterval(atualizaPaginaData, 10000);
+
+        // ---- Botão de encerrar aplicação ----
+        function encerrarapp() {
+            const resposta = confirm("Tem a certeza que deseja encerrar a aplicação?");
+            if (resposta === true) {
+                fetch('/encerrarApp', { method: 'POST' });
+                window.close();
+            }
+        }
+    </script>
+</body>
+</html>

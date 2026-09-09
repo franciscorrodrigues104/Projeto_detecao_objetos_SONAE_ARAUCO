@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <!-- HTMX library: allows parts of the page (like the table) to auto-update
+         via AJAX without writing custom JavaScript fetch logic -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <meta charset="UTF-8">
+    <title>Relatório de Deteções - Trator</title>
+    <style>
+        /* ===== General page styling ===== */
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
+        h2 { color: #000000; margin-top: 30px; }
+
+        /* ===== Table styling ===== */
+        table { width: 100%;  table-layout: fixed;  width: 100%;border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { padding: 12px; text-align: center; border-bottom: 1px solid #ddd; color: #000000; }
+        th { background-color: #83BE42; color: #000000; } /* brand green for header row */
+        tr:hover { background-color: #f1f1f1; } /* row highlight on hover */
+
+        /* ===== Top header layout (logo + counter box) ===== */
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .logo-stats-group {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+
+        
+/* ===== Fullscreen image modal (popup) ===== */
+.modal {
+    display: none;              /* hidden by default, shown via JS */
+    position: fixed; 
+    z-index: 2000;               /* sits above everything else */
+    padding-top: 50px; 
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    overflow: auto;              /* allows scrolling if the image is taller than the screen */
+    background-color: rgba(0,0,0,0.85);  /* dark overlay behind the modal */
+    cursor: zoom-out;            /* hints that clicking will close/zoom out */
+}
+
+/* The enlarged image shown inside the modal */
+.modal-content {
+    margin: auto;
+    display: block;
+    max-width: 90%; 
+    max-height: 85vh;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(255,255,255,0.2);
+    
+    animation-name: zoom;      /* small pop-in animation when opened */
+    animation-duration: 0.3s;
+}
+
+/* Scrollable wrapper used for the collections table */
+.scroll-container {
+max-height: 400px; 
+overflow-y: auto;
+border: 1px solid #ddd;
+border-radius: 8px;
+background: white;
+}
+
+/* Keyframes for the modal "pop-in" effect */
+@keyframes zoom {
+    from {transform:scale(0)} 
+    to {transform:scale(1)}
+}
+
+/* "X" close button in the top-right of the modal */
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.close-modal:hover,
+.close-modal:focus {
+    color: #83BE42;
+    text-decoration: none;
+    transform: scale(1.2);
+}
+    </style>
+</head>
+<body>
+
+    <!-- ============ HEADER: logo + "count of the day" badge ============ -->
+    <div class="header-container">
+        <div class="logo-stats-group">
+            <!-- Flask's url_for() generates the correct static file URL for the logo -->
+            <img src="{{ url_for('static', filename='logo_sonae.png') }}" alt="Logo SONAE ARAUCO" style="max-width: 150px;">
+            
+            <!-- Small info card showing total collections/events for the selected day -->
+            <div style="background: #ffffff; border-left: 6px solid #83BE42; padding: 10px 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column;">
+                <h4 style="margin: 0; color: #95a5a6; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">
+                    Contagem do Dia: {{ data_selecionada }}
+                </h4>
+                <div id="contador-container" style="display: flex; align-items: center; margin-top: 5px;">
+    <!-- {{ total }} is injected server-side by Flask/Jinja2 -->
+    <span id="num-contador" style="font-size: 2.2rem; font-weight: 800; color: #2c3e50; line-height: 1;">
+        {{ total }}
+    </span>
+    <span style="margin-left: 10px; font-size: 1.5rem;">🚜</span>
+
+</div>
+            </div>
+        </div>
+
+       
+    </div>
+
+    <!-- ============ FILTER BY DAY — server-side filter via GET form ============ -->
+    <div style="margin-bottom: 20px; padding: 15px; background: #e9e9e9; border-radius: 8px; display: inline-block; width: 100%; box-sizing: border-box;">
+        <form action="/" method="GET" style="display: flex; gap: 10px; align-items: center;">
+            <label for="data"><strong>Filtrar por Dia:</strong></label>
+            <!-- Submitting this form reloads the page with ?data=YYYY-MM-DD -->
+            <input type="date" id="data" name="data" value="{{ data_selecionada }}" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
+            <button type="submit" style="padding: 6px 20px; cursor: pointer; background-color: #333; color: white; border: none; border-radius: 4px;">🔍 Filtrar</button>
+            <a href="/" style="text-decoration: none; font-size: 0.9rem; color: #666; margin-left: 10px;">Limpar Filtro</a>
+<!-- Shutdown button: confirms with the user, then POSTs to /encerrarApp -->
+<button type="submit" 
+        onclick="encerrarapp()" 
+        style="margin-left: auto; padding: 6px 30px; cursor: pointer; background-color: #ff0000; color: white; border: none; border-radius: 6px;">
+    Sair da aplicação
+</button>
+        </form>
+    </div>
+
+    </div>
+
+<h2>Histórico de recolha de rejeitados grossos - SONAE ARAUCO</h2>
+
+<!-- ============ COLLECTIONS TABLE (auto-refreshes every 2s via HTMX) ============ -->
+<div class="scroll-container" style="max-height: 320px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 50px; background: white;">
+<table style="width: 100%; border-collapse: collapse;">
+    <thead style="position: sticky; top: 0; background-color: #83BE42; color: black; z-index: 10;">
+        <tr>
+            <th style="padding: 12px;">ID</th>
+            <th>Início da recolha</th>
+            <th>Fim da recolha</th>
+            <th>Duração(s)</th>
+            <th>Imagem</th>
+        </tr>
+    </thead>
+    
+    <!-- hx-get + hx-trigger="every 2s": HTMX polls the server every 2 seconds
+         and swaps in fresh rows from /tabela_atualizada, keeping the table live -->
+    <tbody id="corpo-tabela" 
+           hx-get="/tabela_atualizada?data={{ data_selecionada }}" 
+           hx-trigger="every 2s" 
+           hx-swap="innerHTML">
+        <!-- Initial rows are rendered server-side by including a partial template -->
+        {% include 'tabela_parcial.html' %}
+    </tbody>
+</table>
+</div>
+
+<!-- ============ LIVE VIDEO FEED ============ -->
+<div style="margin: 30px 0; text-align: center;">
+    <h3 style="color: #333; font-size: 1rem;">Visualização em Tempo Real</h3>
+    <div style="border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); overflow: hidden; border: 3px solid #333; display: inline-block;">
+        <!-- /video_feed is typically an MJPEG streaming endpoint in Flask
+             (a generator that yields JPEG frames), giving a "live video" effect -->
+        <img src="{{ url_for('video_feed') }}" width="800">
+    </div>
+</div>
+    
+
+    <!-- ============ SINGLE IMAGE MODAL (popup, no side-by-side comparison here) ============ -->
+    <!-- Clicking anywhere on the dark overlay (onclick on the modal itself) closes it -->
+    <div id="meuModalImagem" class="modal" onclick="fecharModal()">
+    <span class="close-modal">&times;</span>
+    <!-- Single enlarged image, its src is set dynamically by abrirModal() -->
+    <img class="modal-content" id="imgModalGrande">
+</div>
+
+    <script>
+
+    // Opens the modal and loads the clicked image (called from table rows, e.g. onclick="abrirModal('...')")
+    function abrirModal(srcImagem) {
+    var modal = document.getElementById("meuModalImagem");
+    var imgModal = document.getElementById("imgModalGrande");
+    
+    modal.style.display = "block"; 
+    imgModal.src = srcImagem; 
+}
+
+// Hides the modal again
+function fecharModal() {
+    var modal = document.getElementById("meuModalImagem");
+    modal.style.display = "none"; 
+}
+
+// Pressing Escape also closes the modal
+document.addEventListener('keydown', function(event) {
+    if (event.key === "Escape") {
+        fecharModal();
+    }
+});
+
+// ---- Auto-reload when the calendar day changes ----
+// Stores the date the page was loaded on ('en-CA' format = YYYY-MM-DD)
+const dataCarregamento = new Date().toLocaleDateString('en-CA');
+
+function atualizaPaginaData() {
+const hoje = new Date().toLocaleDateString('en-CA');
+
+// If today's date no longer matches the load date (i.e. midnight passed),
+// reload the page so it starts showing the new day's data
+if (hoje !== dataCarregamento) {
+    window.location.href = "/"; 
+}
+}
+
+setInterval(atualizaPaginaData, 10000); // check every 10 seconds
+
+// ---- App shutdown button logic ----
+function encerrarapp(){
+const resposta = confirm("Tem a certeza que deseja encerrar a aplicação?");
+if(resposta === true){
+fetch('/encerrarApp', { method: 'POST'}); // tells the Flask server to shut down
+window.close(); // attempts to close the browser tab (only works if opened by script)
+}
+
+}
+
+  
+    </script>
+</body>
+</html>

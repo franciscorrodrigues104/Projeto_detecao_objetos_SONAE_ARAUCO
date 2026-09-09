@@ -1,0 +1,26 @@
+{# loops through each detection row returned by the backend and renders a table row #}
+
+{% for linha in detecoes %}
+<tr>
+    <td style="padding: 10px; border-bottom: 1px solid #eee;">{{ linha.id }}</td>
+    <td style="border-bottom: 1px solid #eee;">{{ linha.timestamp_inicio }}</td>
+    <td style="border-bottom: 1px solid #eee;">{{ linha.timestamp_fim }}</td>
+    <td style="border-bottom: 1px solid #eee;">{{ linha.duracao_total }}s</td>
+    <td style="text-align: center; border-bottom: 1px solid #eee;">
+
+         {# shows the detection image thumbnail if one exists; opens both the annotated and the original image side by side in the modal on click #}
+        {% if linha.imagem_detecao %}
+            <img src="{{ linha.imagem_detecao }}" style="width: 60px; border-radius: 4px; cursor: pointer;" onclick="abrirModal(this.src)">
+        {% else %}
+            <span style="color: #999; font-size: 0.8rem;">Sem foto</span>
+        {% endif %}
+    </td>
+</tr>
+{% endfor %}
+
+<script>
+    (function() {
+        var el = document.getElementById("num-contador");
+        if (el) { el.innerText = "{{ total }}"; }
+    })();
+</script>
