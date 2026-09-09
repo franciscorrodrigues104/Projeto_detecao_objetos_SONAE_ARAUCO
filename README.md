@@ -3,29 +3,29 @@
 **Autor:** Francisco Ribeiro Rodrigues  
 **Instituição:** Sonae Arauco (Estágio Profissional & Curricular)
 
-Este repositório reúne os projetos de Visão Computacional e Inteligência Artificial desenvolvidos durante o estágio curricular na Sonae Arauco. O foco principal dos trabalhos consistiu na automatização de processos industriais através da utilização de modelos YOLO, processamento de imagem e dashboards de monitorização em tempo real.
+Este repositório reúne os projetos de Visão Computacional e Inteligência Artificial desenvolvidos durante o estágio curricular na Sonae Arauco. O foco principal dos trabalhos consistiu na automatização de processos industriais através da utilização de modelos YOLO, processamento de imagens e dashboards de monitorização em tempo real.
 
 ---
 
 # Índice
 
-1. [Projeto 1: Deteção e Contagem de Tratores](#projeto-1-deteção-e-contagem-de-tratores)
-2. [Projeto 2: Deteção de Falhas em Lotes](#projeto-2-deteção-de-falhas-em-lotes)
-3. [Projeto 3: Deteção e Análise de Defeitos em Manta Contínua](#projeto-3-deteção-e-análise-de-defeitos-em-manta-contínua)
+1. [Projeto 1: Deteção e contagem de ações/passagens realizadas por um trator](#projeto-1-deteção-e-contagem-de-tratores)
+2. [Projeto 2: Deteção de falhas e desalinhamentos em Lotes de madeira](#projeto-2-deteção-de-falhas-em-lotes)
+3. [Projeto 3: Deteção e análise de defeitos numa manta contínua](#projeto-3-deteção-e-análise-de-defeitos-em-manta-contínua)
 4. [Tecnologias Utilizadas](#tecnologias-utilizadas)
 5. [Instalação e Execução](#instalação-e-execução)
 6. [Conclusão](#conclusão)
 
 ---
 
-# Projeto 1: Deteção e Contagem de Tratores
+# Projeto 1: Deteção e contagem de ações/passagens realizadas por um trator
 
-Sistema desenvolvido para automatizar a monitorização logística de tratores em ambiente industrial, permitindo contabilizar automaticamente os veículos que circulam numa determinada zona da fábrica.
+Sistema desenvolvido para automatizar a monitorização logística de tratores em ambiente industrial, permitindo contabilizar automaticamente o momento em que o veículo realiza uma ação (recolha de um balde de madeira) numa determinada zona da fábrica.
 
 ## Funcionalidades
 
 - **Deteção de Alta Precisão:** Identificação automática de tratores com métricas superiores a 99%.
-- **Modelo Personalizado:** YOLOv8 treinado especificamente com imagens reais da Sonae Arauco.
+- **Modelo Personalizado:** YOLOv26 treinado especificamente com imagens reais da Sonae Arauco.
 - **Dashboard Web:** Interface desenvolvida em Flask para monitorização em tempo real.
 - **Integração Cloud:** Armazenamento de dados históricos em Supabase para análise posterior.
 
@@ -43,13 +43,13 @@ Treino realizado durante **100 épocas** (aproximadamente 3.7 horas).
 
 ## Principais Resultados
 
-- Automatização completa da contagem de tratores.
+- Automatização completa da contagem de aões (ocorrências) por parte de um trator.
 - Eliminação da necessidade de registo manual.
 - Monitorização contínua da movimentação logística.
 
 ---
 
-# Projeto 2: Deteção de Falhas em Lotes
+# Projeto 2: Deteção de falhas e desalinhamentos em Lotes de madeira
 
 Sistema de visão computacional desenvolvido para detetar automaticamente falhas e desalinhamentos em lotes de produção.
 
@@ -59,6 +59,8 @@ Sistema de visão computacional desenvolvido para detetar automaticamente falhas
 - **Deteção Automática de Falhas**
 - **Cooldown Inteligente de 6 segundos**, evitando múltiplos registos da mesma ocorrência.
 - **Dashboard Dinâmico** para consulta de alertas e histórico.
+- **Sistema de alerta em tempo real** para alerta ao operador acerca de falhas/desalinhamentos nos lotes.
+
 
 ## Performance e Resultados
 
@@ -82,9 +84,9 @@ Sistema de visão computacional desenvolvido para detetar automaticamente falhas
 
 # Projeto 3: Deteção e Análise de Defeitos em Manta Contínua
 
-Sistema avançado de inspeção visual industrial desenvolvido para monitorizar automaticamente a qualidade de mantas em linha de produção.
+Sistema avançado de inspeção visual industrial desenvolvido para monitorizar automaticamente a qualidade da manta de formação na linha de produção.
 
-Este projeto combina **segmentação de imagem, deteção de defeitos, tracking de objetos, armazenamento histórico e análise estatística em tempo real**, constituindo o projeto tecnicamente mais completo desenvolvido durante o estágio.
+Este projeto combina segmentação de imagem, deteção de defeitos, tracking de objetos, armazenamento histórico e análise estatística em tempo real, constituindo o projeto tecnicamente mais completo desenvolvido durante o estágio.
 
 ## Funcionalidades
 
@@ -97,12 +99,12 @@ Este projeto combina **segmentação de imagem, deteção de defeitos, tracking 
 ### Deteção de Defeitos
 
 - Identificação automática de defeitos na superfície da manta.
-- Diferenciação entre múltiplas classes de defeitos.
+- Diferenciação entre múltiplas classes de defeitos (bordo_NOK & monte).
 - Configuração de níveis de confiança por classe.
 
 ### Tracking Inteligente
 
-- Integração com **ByteTrack**.
+- Integração com ByteTrack.
 - Evita contagens duplicadas.
 - Acompanha o mesmo defeito ao longo da sequência de vídeo.
 
@@ -110,7 +112,7 @@ Este projeto combina **segmentação de imagem, deteção de defeitos, tracking 
 
 - Visualização do vídeo processado em tempo real.
 - Atualização contínua das métricas operacionais.
-- Monitorização do sistema através de browser.
+- Monitorização do sistema através de uma página web (no browser).
 
 ### Análise Estatística
 
@@ -135,7 +137,7 @@ Este projeto combina **segmentação de imagem, deteção de defeitos, tracking 
 
 ## Arquitetura da Solução
 
-O sistema foi desenvolvido com uma arquitetura otimizada para operação contínua em ambiente industrial.
+O sistema foi desenvolvido com uma arquitetura otimizada para operação contínua num ambiente industrial.
 
 ### Thread de Captura
 
