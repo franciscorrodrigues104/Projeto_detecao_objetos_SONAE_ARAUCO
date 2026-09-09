@@ -1,7 +1,7 @@
 # Portfolio de Estágio Curricular - Sonae Arauco
 
 **Autor:** Francisco Ribeiro Rodrigues  
-**Instituição:** Sonae Arauco (Estágio Curricular)
+**Instituição:** Sonae Arauco (Estágio Profissional & Curricular)
 
 Este repositório reúne os projetos de Visão Computacional e Inteligência Artificial desenvolvidos durante o estágio curricular na Sonae Arauco. O foco principal dos trabalhos consistiu na automatização de processos industriais através da utilização de modelos YOLO, processamento de imagem e dashboards de monitorização em tempo real.
 
@@ -9,8 +9,12 @@ Este repositório reúne os projetos de Visão Computacional e Inteligência Art
 
 # Índice
 
-1. #projeto-1-deteção-e-contagem-de-tratores
-2. [Projeto 2: Deteção de Falhas em Lotes](#[Projeto 3: Deteção e Análise de Defeitos em Manta Contínua](#projeto-3-deteção-e-análise-destalação-e-execução
+1. [Projeto 1: Deteção e Contagem de Tratores](#projeto-1-deteção-e-contagem-de-tratores)
+2. [Projeto 2: Deteção de Falhas em Lotes](#projeto-2-deteção-de-falhas-em-lotes)
+3. [Projeto 3: Deteção e Análise de Defeitos em Manta Contínua](#projeto-3-deteção-e-análise-de-defeitos-em-manta-contínua)
+4. [Tecnologias Utilizadas](#tecnologias-utilizadas)
+5. [Instalação e Execução](#instalação-e-execução)
+6. [Conclusão](#conclusão)
 
 ---
 
@@ -202,7 +206,7 @@ Treinado durante **100 épocas**.
 - Criação de histórico de defeitos para análise de qualidade.
 - Desenvolvimento de dashboard industrial em tempo real.
 - Identificação de padrões de defeitos através de heatmaps.
-- Sistema preparado para operação contínua em ambiente produtivo.
+- Sistema preparado para operação contínua no ambiente de produção.
 
 ---
 
@@ -251,5 +255,3 @@ python app.py
 Ao longo do estágio curricular foi possível desenvolver e validar soluções de Visão Computacional aplicadas a diferentes cenários industriais, desde a monitorização logística até à inspeção automática da qualidade da produção.
 
 Os projetos demonstram a aplicação prática de modelos YOLO em ambiente industrial, integrando deteção de objetos, segmentação, tracking, dashboards web e armazenamento histórico de dados para apoio à tomada de decisão operacional.
-
-O **Projeto de Deteção e Análise de Defeitos em Manta Contínua** representou a solução mais completa desenvolvida durante o estágio, combinando Inteligência Artificial, Visão Computacional e Engenharia de Software numa aplicação industrial de monitorização em tempo real.
