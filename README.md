@@ -82,7 +82,7 @@ Sistema de visão computacional desenvolvido para detetar automaticamente falhas
 
 ---
 
-# Projeto 3: Deteção e Análise de Defeitos em Manta Contínua
+# Projeto 3: Deteção e análise de defeitos numa manta contínua
 
 Sistema avançado de inspeção visual industrial desenvolvido para monitorizar automaticamente a qualidade da manta de formação na linha de produção.
 
