@@ -3,121 +3,253 @@
 **Autor:** Francisco Ribeiro Rodrigues  
 **Instituição:** Sonae Arauco (Estágio Curricular)
 
-Este repositório documenta os projetos de visão computacional desenvolvidos durante o meu estágio na Sonae Arauco, focados na automatização da monitorização industrial através de inteligência artificial.
+Este repositório reúne os projetos de Visão Computacional e Inteligência Artificial desenvolvidos durante o estágio curricular na Sonae Arauco. O foco principal dos trabalhos consistiu na automatização de processos industriais através da utilização de modelos YOLO, processamento de imagem e dashboards de monitorização em tempo real.
 
 ---
 
-## Índice
+# Índice
 
-1. [Projeto-1
-2. [Projeto 2: Deteção de Falhas em Lotes](#projeto-2eitos em Manta Contínua](#pro e Contagem de Tratores
-
-Sistema desenvolvido para a automação da monitorização logística de tratores em ambiente industrial.
-
-### Funcionalidades
-
-* **Deteção de Alta Precisão:** Identificação de tratores com métricas de sucesso superiores a 99%.
-* **Modelo Finalizado:** YOLOv8 treinado especificamente para o ambiente fabril da Sonae Arauco.
-* **Interface Web:** Dashboard em Flask para visualização das deteções e contagem automática.
-* **Integração Cloud:** Registo de dados no Supabase para análise histórica e relatórios.
-
-### Performance e Resultados Finais
-
-O treino foi concluído após 100 épocas (aprox. 3.7 horas de processamento):
-
-* **mAP50:** 0.995 (99.5%)
-* **mAP50-95:** 0.99 (99%)
-* **Precisão (P):** 0.974
-* **Recall (R):** 1.0
-* **Velocidade de Inferência:** ~66.3ms por imagem
+1. #projeto-1-deteção-e-contagem-de-tratores
+2. [Projeto 2: Deteção de Falhas em Lotes](#[Projeto 3: Deteção e Análise de Defeitos em Manta Contínua](#projeto-3-deteção-e-análise-destalação-e-execução
 
 ---
 
-## Projeto 2: Deteção de Falhas em Lotes
+# Projeto 1: Deteção e Contagem de Tratores
 
-Sistema especializado na deteção automática de anomalias em lotes de produção em tempo real.
+Sistema desenvolvido para automatizar a monitorização logística de tratores em ambiente industrial, permitindo contabilizar automaticamente os veículos que circulam numa determinada zona da fábrica.
 
-### Funcionalidades
+## Funcionalidades
 
-* **Monitorização em Tempo Real:** Deteção contínua de falhas na linha de produção.
-* **Mecanismo de Estabilidade:** Aplicação de um cooldown de 6 segundos para evitar registos duplicados ou ruído.
-* **Dashboard Dinâmico:** Visualização de alertas e histórico de falhas com atualização automática.
+- **Deteção de Alta Precisão:** Identificação automática de tratores com métricas superiores a 99%.
+- **Modelo Personalizado:** YOLOv8 treinado especificamente com imagens reais da Sonae Arauco.
+- **Dashboard Web:** Interface desenvolvida em Flask para monitorização em tempo real.
+- **Integração Cloud:** Armazenamento de dados históricos em Supabase para análise posterior.
 
-### Performance e Resultados Finais
+## Performance e Resultados
 
-O modelo atingiu os seguintes níveis de confiança após o treino:
+Treino realizado durante **100 épocas** (aproximadamente 3.7 horas).
 
-**Modelo de Deteção e Contagem de Tratores:**
+| Métrica | Resultado |
+|----------|------------|
+| mAP50 | 99.5% |
+| mAP50-95 | 99.0% |
+| Precisão (P) | 97.4% |
+| Recall (R) | 100% |
+| Tempo de Inferência | ~66.3 ms |
 
-* **mAP50:** 0.995 (99.5%)
-* **mAP50-95:** 0.99 (99%)
-* **Precisão (P):** 0.974
-* **Recall (R):** 1.0
-* **Velocidade de Inferência:** ~66.3ms por imagem
+## Principais Resultados
 
-**Modelo de Deteção de Falhas em Lotes (Desalinhamento e Falhas):**
-
-* **mAP50:** 0.534 (53.4%)
-* **mAP50-95:** 0.188 (18.8%)
-* **Precisão (P):** 0.763
-* **Recall (R):** 0.509
-* **Velocidade de Inferência:** ~5.8ms por imagem (preprocessamento + inferência)
-
----
-
-## Projeto 3: Deteção e Análise de Defeitos em Manta Contínua
-
-Sistema desenvolvido para a monitorização automática da qualidade de mantas em linha de produção, recorrendo a modelos de Inteligência Artificial para segmentação, deteção de defeitos e análise estatística em tempo real.
-
-### Funcionalidades
-
-* **Segmentação da Manta:** Utilização de um modelo YOLO de segmentação para identificar a área útil da manta em tempo real.
-* **Deteção de Defeitos:** Aplicação de um segundo modelo YOLO treinado especificamente para identificar diferentes tipos de defeitos na superfície da manta.
-* **Tracking Inteligente:** Integração do algoritmo ByteTrack para evitar contagens duplicadas e acompanhar defeitos ao longo da sequência de vídeo.
-* **Dashboard Web em Tempo Real:** Visualização simultânea do vídeo processado, estatísticas e indicadores operacionais.
-* **Heatmap de Defeitos:** Distribuição dos defeitos por zonas da manta para identificação de padrões recorrentes na produção.
-* **Histograma por Classe:** Contagem e análise da frequência de ocorrência de cada tipo de defeito.
-* **Tendência Temporal:** Visualização da evolução horária dos defeitos registados.
-* **Armazenamento Automático:** Registo de deteções em ficheiros CSV e armazenamento das respetivas imagens para análise posterior.
-* **Monitorização de Performance:** Indicadores em tempo real de FPS da câmara, FPS de inferência, latência média e estado do sistema.
-* **Recuperação Automática de Falhas:** Reconexão automática à câmara em caso de perda temporária de comunicação.
-
-### Arquitetura da Solução
-
-O sistema foi desenvolvido com uma arquitetura multithread otimizada para processamento contínuo:
-
-* **Thread de Captura:** Responsável pela aquisição do stream de vídeo da linha de produção.
-* **Thread de Inferência:** Executa a segmentação da manta, deteção de defeitos e tracking.
-* **Thread de Escrita:** Guarda imagens e registos sem impactar o desempenho da inferência.
-* **Thread de Monitorização:** Responsável pela recolha de métricas de desempenho e estado do sistema.
-
-### Principais Resultados
-
-* Automatização da inspeção visual da manta em tempo real.
-* Redução da necessidade de inspeção manual contínua.
-* Eliminação de duplicados através de tracking por identificador único.
-* Criação de histórico de defeitos para suporte à análise de qualidade.
-* Dashboard interativo para apoio à tomada de decisão operacional.
-* Sistema preparado para funcionamento contínuo em ambiente industrial.
+- Automatização completa da contagem de tratores.
+- Eliminação da necessidade de registo manual.
+- Monitorização contínua da movimentação logística.
 
 ---
 
-## Tecnologias Utilizadas
+# Projeto 2: Deteção de Falhas em Lotes
 
-* **IA / Deep Learning:** YOLOv8/YOLO11s (Ultralytics), PyTorch
-* **Visão Computacional:** OpenCV
-* **Tracking de Objetos:** ByteTrack
-* **Linguagem:** Python 3.12
-* **Backend:** Flask & Supabase (PostgreSQL)
-* **Interface:** HTML, JavaScript, HTMX
-* **Processamento Numérico:** NumPy
-* **Hardware de Teste:** Intel Core i5-8250U @ 1.60GHz
+Sistema de visão computacional desenvolvido para detetar automaticamente falhas e desalinhamentos em lotes de produção.
+
+## Funcionalidades
+
+- **Monitorização em Tempo Real**
+- **Deteção Automática de Falhas**
+- **Cooldown Inteligente de 6 segundos**, evitando múltiplos registos da mesma ocorrência.
+- **Dashboard Dinâmico** para consulta de alertas e histórico.
+
+## Performance e Resultados
+
+### Modelo de Deteção de Falhas em Lotes
+
+| Métrica | Resultado |
+|----------|------------|
+| mAP50 | 53.4% |
+| mAP50-95 | 18.8% |
+| Precisão (P) | 76.3% |
+| Recall (R) | 50.9% |
+| Tempo de Inferência | ~5.8 ms |
+
+## Principais Resultados
+
+- Identificação automática de desalinhamentos.
+- Redução da necessidade de inspeção manual.
+- Validação da viabilidade de utilização de IA em cenários com elevada variabilidade visual.
 
 ---
 
-## Instalação e Execução
+# Projeto 3: Deteção e Análise de Defeitos em Manta Contínua
 
-1. **Clonar o repositório:**
+Sistema avançado de inspeção visual industrial desenvolvido para monitorizar automaticamente a qualidade de mantas em linha de produção.
+
+Este projeto combina **segmentação de imagem, deteção de defeitos, tracking de objetos, armazenamento histórico e análise estatística em tempo real**, constituindo o projeto tecnicamente mais completo desenvolvido durante o estágio.
+
+## Funcionalidades
+
+### Segmentação da Manta
+
+- Segmentação automática da área útil da manta através de YOLO Segmentation.
+- Eliminação do fundo e das zonas irrelevantes da imagem.
+- Identificação da região de inspeção em tempo real.
+
+### Deteção de Defeitos
+
+- Identificação automática de defeitos na superfície da manta.
+- Diferenciação entre múltiplas classes de defeitos.
+- Configuração de níveis de confiança por classe.
+
+### Tracking Inteligente
+
+- Integração com **ByteTrack**.
+- Evita contagens duplicadas.
+- Acompanha o mesmo defeito ao longo da sequência de vídeo.
+
+### Dashboard Industrial
+
+- Visualização do vídeo processado em tempo real.
+- Atualização contínua das métricas operacionais.
+- Monitorização do sistema através de browser.
+
+### Análise Estatística
+
+- Histograma por tipo de defeito.
+- Heatmap horizontal da manta.
+- Tendência horária dos defeitos.
+- Ranking dos defeitos mais frequentes.
+
+### Armazenamento Automático
+
+- Registo histórico em ficheiros CSV organizados por dia.
+- Armazenamento automático das imagens dos defeitos detetados.
+- Histórico de inspeções para análise futura.
+
+### Robustez Operacional
+
+- Reconexão automática à câmara.
+- Arquitetura multi-thread para elevada fluidez.
+- Monitorização contínua de FPS e latência.
+
+---
+
+## Arquitetura da Solução
+
+O sistema foi desenvolvido com uma arquitetura otimizada para operação contínua em ambiente industrial.
+
+### Thread de Captura
+
+Responsável pela aquisição contínua do stream MJPEG da linha de produção.
+
+### Thread de Inferência
+
+Executa:
+
+- Segmentação da manta
+- Deteção de defeitos
+- Tracking dos defeitos
+
+### Thread de Escrita
+
+Responsável pelo armazenamento assíncrono de:
+
+- Imagens
+- Registos históricos
+- Estatísticas
+
+### Thread de Monitorização
+
+Monitoriza:
+
+- FPS da câmara
+- FPS de inferência
+- Latência média
+- Estado do sistema
+- Utilização da fila de gravação
+
+---
+
+## Performance e Resultados
+
+### Modelo de Segmentação da Manta
+
+Treinado durante **100 épocas**.
+
+| Métrica | Resultado |
+|----------|------------|
+| Precision (B) | ~99.8% |
+| Recall (B) | ~99.8% |
+| mAP50 (B) | ~99.5% |
+| mAP50-95 (B) | ~99.0% |
+| Precision (M) | ~99.8% |
+| Recall (M) | ~99.8% |
+| mAP50 (M) | ~99.5% |
+| mAP50-95 (M) | ~99.5% |
+
+### Modelo de Deteção de Defeitos
+
+Treinado durante **100 épocas**.
+
+| Métrica | Resultado |
+|----------|------------|
+| Precisão (P) | ~97.0% |
+| Recall (R) | ~88.5% |
+| mAP50 | ~93.0% |
+| mAP50-95 | ~69.5% |
+
+## Principais Resultados
+
+- Inspeção automática da manta em tempo real.
+- Segmentação da manta com desempenho superior a 99%.
+- Deteção automática de defeitos com mAP50 superior a 93%.
+- Eliminação de contagens duplicadas através de tracking.
+- Criação de histórico de defeitos para análise de qualidade.
+- Desenvolvimento de dashboard industrial em tempo real.
+- Identificação de padrões de defeitos através de heatmaps.
+- Sistema preparado para operação contínua em ambiente produtivo.
+
+---
+
+# Tecnologias Utilizadas
+
+- **Deep Learning:** YOLOv8, YOLO11s, PyTorch
+- **Visão Computacional:** OpenCV
+- **Tracking de Objetos:** ByteTrack
+- **Processamento Numérico:** NumPy
+- **Backend:** Flask
+- **Base de Dados:** Supabase (PostgreSQL)
+- **Frontend:** HTML, JavaScript, HTMX
+- **Linguagem:** Python 3.12
+
+## Hardware de Teste
+
+- Intel Core i5-8250U @ 1.60 GHz
+
+---
+
+# Instalação e Execução
+
+## Clonar o repositório
 
 ```bash
 git clone https://github.com/franciscorrodrigues104/Projeto_detecao_objetos_SONAE_ARAUCO.git
+cd Projeto_detecao_objetos_SONAE_ARAUCO
+```
+
+## Instalar dependências
+
+```bash
+pip install -r requirements.txt
+```
+
+## Executar aplicação
+
+```bash
+python app.py
+```
+
+---
+
+# Conclusão
+
+Ao longo do estágio curricular foi possível desenvolver e validar soluções de Visão Computacional aplicadas a diferentes cenários industriais, desde a monitorização logística até à inspeção automática da qualidade da produção.
+
+Os projetos demonstram a aplicação prática de modelos YOLO em ambiente industrial, integrando deteção de objetos, segmentação, tracking, dashboards web e armazenamento histórico de dados para apoio à tomada de decisão operacional.
+
+O **Projeto de Deteção e Análise de Defeitos em Manta Contínua** representou a solução mais completa desenvolvida durante o estágio, combinando Inteligência Artificial, Visão Computacional e Engenharia de Software numa aplicação industrial de monitorização em tempo real.
