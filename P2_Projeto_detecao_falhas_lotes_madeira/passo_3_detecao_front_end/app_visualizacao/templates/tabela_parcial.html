@@ -1,0 +1,35 @@
+{% for linha in detecoes %}
+<tr class="{{ 'linha-verificada' if linha.check else 'linha-pendente' }}" data-id="{{ linha.id }}">
+    <td class="area-falha" data-area="{{ linha.area_falha or 0 }}" style="display:none;"></td>
+    <td style="padding: 10px; text-align: center; border-bottom: 1px solid #eee;">{{ linha.nome_camara or '—' }}</td>
+    <td style="padding: 10px; text-align: center; border-bottom: 1px solid #eee;">{{ linha.timestamp_inicio }}</td>
+
+    <td style="padding: 10px; text-align: center; border-bottom: 1px solid #eee;">
+        {% if linha.imagem_detecao %}
+            <img src="{{ linha.imagem_detecao }}"
+                 title="Ver imagens e verificar"
+                 style="width: 50px; border-radius: 4px; cursor: zoom-in; border: 2px solid #ffffff;"
+                 onclick="abrirModal('{{ linha.imagem_detecao }}', '{{ linha.imagem_original }}', {{ linha.id }}, {{ 'true' if linha.check else 'false' }})">
+        {% else %}
+            <span style="or:#666; font-size:0.8rem;">Abrir imagem para verificar</span>
+        {% endif %}
+    </td>
+
+    <td style="padding: 10px; text-align: center; border-bottom: 1px solid #eee;">
+        {{ linha.utilizador_check or '—' }}
+    </td>
+
+    <td style="padding: 10px; text-align: center; border-bottom: 1px solid #eee;">
+        {{ linha.timestamp_check or '—' }}
+    </td>
+</tr>
+{% endfor %}
+
+<script>
+(function() {
+    var el = document.getElementById("num-contador");
+    if (el) {
+        el.innerText = "{{ total }}";
+    }
+})();
+</script>

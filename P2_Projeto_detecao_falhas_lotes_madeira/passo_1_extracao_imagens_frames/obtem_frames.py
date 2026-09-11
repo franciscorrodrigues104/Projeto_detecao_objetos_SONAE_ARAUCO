@@ -2,8 +2,9 @@ import cv2
 import os
 
     
-video_path = r"C:\Users\frrodrigues\Desktop\Projeto_falhas_placas\passo_1_extracao_imagens_frames\novas_imagens\novos_videos\Export_2026-05-11_09_38_05_292\P127 – ACB – Formação de lotes – Mesa 2 Trás 2026-05-09_10_21_26_071.mkv"
-output_folder = r"C:\Users\frrodrigues\Desktop\Projeto_falhas_placas\passo_1_extracao_imagens_frames\novas_imagens\frames_extracao"
+video_path = r"C:\Users\frrodrigues\Desktop\frames_dataset_v2_falhas\Export_2026-07-14_11_11_09_668\P127 – ACB – Formação de lotes – Mesa 2 Trás 2026-07-06_12_26_13_920.mkv"
+
+output_folder = r"C:\Users\frrodrigues\Desktop\frames_dataset_v2_falhas\dataset_novo_frames"
     
 os.makedirs(output_folder, exist_ok=True)
 

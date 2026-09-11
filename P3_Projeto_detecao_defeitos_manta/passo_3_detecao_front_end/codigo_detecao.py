@@ -34,6 +34,11 @@ def resource_path(relative_path):
 
 load_dotenv(resource_path(".env"))
 
+# Lido aqui em cima porque é usado já na configuração do logging (nível do
+# ficheiro/consola) e mais abaixo também para decidir se se imprimem os
+# logs de debug por deteção individual.
+DEBUG_DETECOES = os.getenv("DEBUG_DETECOES", "false").lower() == "true"
+
 # ==================================================
 # LOGGING
 # ==================================================
@@ -42,7 +47,11 @@ PASTA_LOGS.mkdir(exist_ok=True)
 FICHEIRO_LOG = PASTA_LOGS / "app.log"
 
 logger = logging.getLogger("manta")
-logger.setLevel(logging.DEBUG)
+# Só entra em modo DEBUG (verboso: estado periódico, segmentação frame a
+# frame, pedidos HTTP, etc.) se DEBUG_DETECOES=true no .env. No dia a dia
+# fica em INFO, que mantém arranque, erros, avisos e cada deteção de
+# defeito gravada — sem entupir o ficheiro com ruído de "manta detetada".
+logger.setLevel(logging.DEBUG if DEBUG_DETECOES else logging.INFO)
 
 _formato = logging.Formatter(
     "%(asctime)s | %(levelname)-8s | %(threadName)-15s | %(message)s",
@@ -52,14 +61,17 @@ _formato = logging.Formatter(
 _handler_ficheiro = logging.handlers.RotatingFileHandler(
     FICHEIRO_LOG, maxBytes=2_000_000, backupCount=5, encoding="utf-8"
 )
-_handler_ficheiro.setLevel(logging.DEBUG)
+_handler_ficheiro.setLevel(logging.DEBUG if DEBUG_DETECOES else logging.INFO)
 _handler_ficheiro.setFormatter(_formato)
 logger.addHandler(_handler_ficheiro)
 logger.propagate = False
 
 logger_werkzeug = logging.getLogger("werkzeug")
 logger_werkzeug.handlers = [_handler_ficheiro]
-logger_werkzeug.setLevel(logging.INFO)
+# Antes estava em INFO: registava uma linha por cada pedido HTTP (incluindo
+# o polling do dashboard a /estado_sistema e /dados_grafico). Em WARNING só
+# aparecem problemas reais (erros 4xx/5xx, etc.).
+logger_werkzeug.setLevel(logging.WARNING)
 logger_werkzeug.propagate = False
 
 try:
@@ -167,8 +179,6 @@ def gerar_tracker_config(caminho="tracker_manta.yaml"):
 
 TRACKER_CONFIG = resource_path("tracker_manta.yaml")
 gerar_tracker_config(TRACKER_CONFIG)
-
-DEBUG_DETECOES = os.getenv("DEBUG_DETECOES", "false").lower() == "true"
 
 # Número de "zonas" em que a largura da manta é dividida para o heatmap.
 # Guardamos x_normalizado (posição relativa 0-1) em vez de depender só da
@@ -557,7 +567,7 @@ def captura_worker():
     try:
         cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     except Exception:
-        logger.debug("captura_worker: CAP_PROP_BUFFERSIZE não suportado por este backend.")
+        pass
 
     falhas_seguidas = 0
 
@@ -646,10 +656,8 @@ def monitor_worker():
                 unicos_contados=n_unicos,
             )
 
-        logger.info(
-            "monitor: fps_camera=%.1f fps_yolo=%.1f fila_escrita=%d latencia_media=%.1fms unicos=%d",
-            fps_camera, fps_yolo, tamanho_fila, latencia_media_ms, n_unicos,
-        )
+        # Este aviso mantém-se em WARNING (fica sempre visível mesmo com
+        # DEBUG_DETECOES=false): sinaliza um problema real, não é ruído.
         if tamanho_fila >= FILA_GRAVACAO_MAXSIZE * 0.8:
             logger.warning("monitor: fila_gravacao a aproximar-se do limite (%d/%d) — disco pode estar lento.",
                             tamanho_fila, FILA_GRAVACAO_MAXSIZE)
@@ -677,9 +685,7 @@ def yolo_worker():
     cache_bbox = None  # (x, y, w, h)
 
     while not shutdown_event.is_set():
-        recebeu = raw_frame_novo.wait(timeout=1.0)
-        if not recebeu:
-            logger.debug("yolo_worker: sem frames novos no último 1s (a captura pode estar parada).")
+        raw_frame_novo.wait(timeout=1.0)
 
         with raw_frame_lock:
             frame = latest_raw_frame
@@ -733,7 +739,6 @@ def yolo_worker():
                 frame_segmentado = resultado_manta.plot()
 
                 if resultado_manta.masks is None:
-                    logger.debug("yolo_worker: nenhuma manta segmentada neste frame.")
                     cache_manta_valida = False
                     cache_mask = None
                     cache_bbox = None
@@ -801,15 +806,6 @@ def yolo_worker():
                             return nomes.get(int(cls_idx), str(cls_idx))
                         return nomes[int(cls_idx)] if int(cls_idx) < len(nomes) else str(cls_idx)
 
-                    if DEBUG_DETECOES and resultado_defeitos.boxes is not None and len(resultado_defeitos.boxes) > 0:
-                        ids_dbg = resultado_defeitos.boxes.id
-                        cls_arr = resultado_defeitos.boxes.cls.cpu().numpy()
-                        conf_arr = resultado_defeitos.boxes.conf.cpu().numpy()
-                        for i in range(len(cls_arr)):
-                            tid_dbg = int(ids_dbg[i]) if ids_dbg is not None else None
-                            logger.debug("classe=%s conf=%.3f track_id=%s",
-                                         nome_da_classe(cls_arr[i]), conf_arr[i], tid_dbg)
-
                     if resultado_defeitos.boxes is not None and len(resultado_defeitos.boxes) > 0:
                         classes_idx_todas = resultado_defeitos.boxes.cls.cpu().numpy().astype(int)
                         confs_todas = resultado_defeitos.boxes.conf.cpu().numpy()
@@ -823,19 +819,49 @@ def yolo_worker():
 
                     roi_anotada = resultado_defeitos.plot()
 
-                    if (resultado_defeitos.boxes is not None and
-                            resultado_defeitos.boxes.id is not None):
+                    if resultado_defeitos.boxes is not None and len(resultado_defeitos.boxes) > 0:
 
-                        ids = resultado_defeitos.boxes.id.cpu().numpy().astype(int)
                         classes_idx = resultado_defeitos.boxes.cls.cpu().numpy().astype(int)
                         confs = resultado_defeitos.boxes.conf.cpu().numpy()
                         xyxy = resultado_defeitos.boxes.xyxy.cpu().numpy()
 
+                        # NOTA IMPORTANTE: o bytetrack só marca uma pista como
+                        # "confirmada" (com track_id em boxes.id) se ela foi
+                        # reencontrada num 2º frame consecutivo. Um defeito que
+                        # apareça em UM SÓ frame nunca chega a ter track_id, mesmo
+                        # com confiança alta — mas continua a ser desenhado por
+                        # resultado_defeitos.plot() acima. Se exigíssemos sempre
+                        # boxes.id, essas deteções "de um só frame" eram
+                        # descartadas silenciosamente (foi o caso reportado).
+                        # Por isso tratamos as duas situações:
+                        ids_raw = resultado_defeitos.boxes.id
+                        if ids_raw is not None:
+                            ids = ids_raw.cpu().numpy().astype(int)
+                        else:
+                            ids = [None] * len(classes_idx)
+
                         for track_id, cls_idx, conf, box in zip(ids, classes_idx, confs, xyxy):
 
                             classe_nome = nome_da_classe(cls_idx)
+                            bx1, by1, bx2, by2 = box.astype(int)
 
-                            chave = (int(track_id), classe_nome)
+                            if track_id is not None:
+                                # Pista já confirmada pelo tracker: dedup pelo track_id,
+                                # como antes.
+                                chave = (int(track_id), classe_nome)
+                            else:
+                                # Sem track_id ainda (1º frame em que aparece). Usamos
+                                # uma chave aproximada por posição (arredondada a uma
+                                # grelha de 50px) + classe, só para não gravar o MESMO
+                                # objeto repetidamente em frames seguidos antes de
+                                # ganhar um id real. Pode, raramente, resultar numa
+                                # gravação a mais quando a pista é depois confirmada
+                                # com um track_id (fica uma 2ª linha no CSV para o
+                                # mesmo defeito) — preferível a perder a deteção.
+                                centro_x_aprox = (bx1 + bx2) // 2
+                                centro_y_aprox = (by1 + by2) // 2
+                                chave = ("sem_id", classe_nome, centro_x_aprox // 50, centro_y_aprox // 50)
+
                             agora_ts = time.time()
                             with ids_lock:
                                 if chave in ids_contados:
@@ -843,7 +869,6 @@ def yolo_worker():
                                     continue
                                 ids_contados[chave] = agora_ts
 
-                            bx1, by1, bx2, by2 = box.astype(int)
                             # Limitar SEMPRE os dois extremos (min E max) às dimensões
                             # da ROI: antes só se corrigia bx1/by1 (>= 0), mas bx2/by2
                             # também podem exceder roi.shape se a caixa do tracker sair
@@ -857,7 +882,8 @@ def yolo_worker():
                             centro_x = (bx1 + bx2) / 2
                             x_normalizado = max(0.0, min(1.0, centro_x / w))
 
-                            guardar_deteccao(track_id, classe_nome, conf, x_normalizado, recorte)
+                            id_para_guardar = track_id if track_id is not None else -1
+                            guardar_deteccao(id_para_guardar, classe_nome, conf, x_normalizado, recorte)
 
                     with ids_lock:
                         n_unicos = len(ids_contados)
@@ -867,8 +893,6 @@ def yolo_worker():
                                 (20, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
                     painel_roi = cv2.resize(roi_anotada, (frame.shape[1], frame.shape[0]))
-                else:
-                    logger.debug("yolo_worker: ROI vazia após máscara (w=%s, roi.size=%s).", w, roi.size)
 
             # --- overlay com FPS/latência/fila em tempo real (atualizado a cada
             # MONITOR_INTERVALO segundos pelo monitor_worker) — ajuda muito a
@@ -911,7 +935,6 @@ threading.Thread(target=monitor_worker, daemon=True, name="monitor").start()
 @app.route('/video_feed')
 def video_feed():
     cliente = request.remote_addr  # capturado aqui, dentro do contexto do pedido
-    logger.info("Pedido recebido em /video_feed (cliente=%s)", cliente)
 
     def generate():
         frames_enviados = 0
@@ -967,7 +990,6 @@ def estado_sistema_route():
 
 @app.route('/')
 def index():
-    logger.info("Pedido recebido em / (cliente=%s)", request.remote_addr)
     data_filtro = request.args.get('data')
     data_alvo = data_filtro or data_hoje()
     histograma, zonas, total = obter_estatisticas(data_alvo)

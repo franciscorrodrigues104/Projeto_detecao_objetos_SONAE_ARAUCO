@@ -1,9 +1,9 @@
 from ultralytics import YOLO
 
-caminho = r"C:\Users\frrodrigues\Desktop\Projeto_falhas_placas\passo_5_detecao_front_end\app_detecao\modelo_lotes_v2.pt"
+caminho = r"C:\Users\frrodrigues\Desktop\Projeto_falhas_placas\passo_4_detecao_front_end\app_detecao\modelo_lotes_v4.pt"
 model = YOLO(caminho)
 results = model.predict(
-    source=r"C:\Users\frrodrigues\Desktop\Projeto_falhas_placas\passo_1_extracao_imagens_frames\novas_imagens\frames_extracao", 
+    source=r"C:\Users\frrodrigues\Desktop\Projeto_falhas_placas\passo_1_extracao_imagens_frames\pt4_melhoria\frames", 
     save_crop=True,
     save_txt=True,      # Guarda os ficheiros .txt (as labels)
     save_conf=True,     # Guarda a confiança (ajuda a filtrar o que está mal)
